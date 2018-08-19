@@ -31,7 +31,7 @@ services:
       - ./volumes/app/mattermost/logs:/mattermost/logs:rw
       - /etc/localtime:/etc/localtime:ro
     ports:
-      - "8000:8000"    
+      - "8065:8000"    
     environment:
       # set same as db credentials and dbname
       - DB_HOST=mydb
