@@ -2,22 +2,19 @@ version: "2"
 
 services:
 
-  db:
-    build: db
-    read_only: true
-    restart: unless-stopped
-    volumes:
-      - ./volumes/db/var/lib/postgresql/data:/var/lib/postgresql/data
-      - /etc/localtime:/etc/localtime:ro
+  mydb:    
+    restart: always
+    image: mysql:latest
     environment:
-      - POSTGRES_USER=mmuser
-      - POSTGRES_PASSWORD=mmuser_password
-      - POSTGRES_DB=mattermost
-    # uncomment the following to enable backup
-    #  - AWS_ACCESS_KEY_ID=XXXX
-    #  - AWS_SECRET_ACCESS_KEY=XXXX
-    #  - WALE_S3_PREFIX=s3://BUCKET_NAME/PATH
-    #  - AWS_REGION=us-east-1
+      - MYSQL_USER=mmuser
+      - MYSQL_PASSWORD=mmuser_password
+      - MYSQL_DATABASE=mattermost
+      - MYSQL_ROOT_PASSWORD=password
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./volumes/db/var/lib/mysql:/var/lib/mysql
+      - /etc/localtime:/etc/localtime:ro
 
   app:
     build:
@@ -33,25 +30,20 @@ services:
       - ./volumes/app/mattermost/data:/mattermost/data:rw
       - ./volumes/app/mattermost/logs:/mattermost/logs:rw
       - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "8000:8000"    
     environment:
       # set same as db credentials and dbname
+      - DB_HOST=mydb
+      - DB_PORT_NUMBER=3306
       - MM_USERNAME=mmuser
       - MM_PASSWORD=mmuser_password
       - MM_DBNAME=mattermost
+      - MM_SQLSETTINGS_DATASOURCE=mmuser:mmuser_password@tcp(mydb:3306)/mattermost?charset=utf8mb4,utf8&readTimeout=30s&writeTimeout=30s
       # in case your config is not in default location
       #- MM_CONFIG=/mattermost/config/config.json
 
-  web:
-    build: web
-    ports:
-      - "80:80"
-      - "443:443"
-    read_only: true
-    restart: unless-stopped
-    volumes:
-      # This directory must have cert files if you want to enable SSL
-      - ./volumes/web/cert:/cert:ro
-      - /etc/localtime:/etc/localtime:ro
-    # Uncomment for SSL
-    # environment:
-    #  - MATTERMOST_ENABLE_SSL=true
+  
+
+
+ 
